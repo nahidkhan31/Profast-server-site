@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion } = require("mongodb");
 
 // load environment variables from .env file
 dotenv.config();
@@ -12,10 +12,6 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-
-
-
-
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.hauetn5.mongodb.net/?appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -24,7 +20,7 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
 async function run() {
@@ -32,39 +28,38 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    const db = client.db('ParcelDB'); // database name
-    const parcelCollection = db.collection('parcels'); // collection
+    const db = client.db("ParcelDB"); // database name
+    const parcelCollection = db.collection("parcels"); // collection
 
-    app.get('/parcels', async (req, res)=>{
-        const parcels = await parcelCollection.find().toArray();
-        res.send(parcels)
+    app.get("/parcels", async (req, res) => {
+      const parcels = await parcelCollection.find().toArray();
+      res.send(parcels);
     });
 
     // POST: Create a new parcel
-    app.post('/parcels', async(req, res)=>{
-        try{
-            const newParcel = req.body;
-            // newParcel.createdAt = new Date();
-            const result = await parcelCollection.insertOne(newParcel)
-            res.status(201).send(result)
-        } catch (error) {
-            console.error("Error inserting parcel", error)
-            res.status(300).send({ message, 'Failed to create a parcel'});
-        }
+    app.post("/parcels", async (req, res) => {
+      try {
+        const newParcel = req.body;
+        // newParcel.createdAt = new Date();
+        const result = await parcelCollection.insertOne(newParcel);
+        res.status(201).send(result);
+      } catch (error) {
+        console.error("Error inserting parcel", error);
+        res.status(300).send(message, "Failed to create a parcel");
+      }
     });
-
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
   }
 }
 run().catch(console.dir);
-
-
 
 // sample route
 app.get("/", (req, res) => {
