@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 // load environment variables from .env file
 dotenv.config();
@@ -28,7 +28,7 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    const db = client.db("ParcelDB"); // database name
+    const db = client.db("parcelDB"); // database name
     const parcelCollection = db.collection("parcels"); // collection
 
     app.get("/parcels", async (req, res) => {
@@ -64,6 +64,20 @@ async function run() {
       } catch (error) {
         console.error("Error inserting parcel", error);
         res.status(300).send(message, "Failed to create a parcel");
+      }
+    });
+
+    // delete the parcels..
+    app.delete("/parcels/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const result = await parcelCollection.deleteOne({
+          _id: new ObjectId(id),
+        });
+        res.send(result);
+      } catch (error) {
+        console.error("Error to deleting the parcel:", error);
+        res.status(500).send({ message: "Failed to delete the parcel" });
       }
     });
 
