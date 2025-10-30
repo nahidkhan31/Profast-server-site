@@ -34,6 +34,7 @@ async function run() {
     const db = client.db("parcelDB"); // database name
     const parcelCollection = db.collection("parcels"); // collection
     const paymentCollection = db.collection("payments");
+    const trackingCollection = db.collection("trackings");
 
     app.get("/parcels", async (req, res) => {
       const parcels = await parcelCollection.find().toArray();
@@ -106,7 +107,68 @@ async function run() {
       }
     });
 
+    app.get("/trackings/:trackingId", async (req, res) => {
+      const trackingId = req.params.trackingId;
 
+      const updates = await trackingCollection
+        .find({ tracking_id: trackingId })
+        .sort({ timestamp: 1 }) // sort by time ascending
+        .toArray();
+
+      res.json(updates);
+    });
+
+    app.post("/trackings", async (req, res) => {
+      const update = req.body;
+
+      update.timestamp = new Date(); // ensure correct timestamp
+      if (!update.tracking_id || !update.status) {
+        return res
+          .status(400)
+          .json({ message: "tracking_id and status are required." });
+      }
+
+      const result = await trackingCollection.insertOne(update);
+      res.status(201).json(result);
+    });
+
+    app.post("/tracking", async (req, res) => {
+      const {
+        tracking_id,
+        parcel_id,
+        status,
+        message,
+        updated_by = "",
+      } = req.body;
+
+      const log = {
+        tracking_id,
+        parcel_id: parcel_id ? new ObjectId(parcel_id) : undefined,
+        status,
+        message,
+        time: new Date(),
+        updated_by,
+      };
+
+      const result = await trackingCollection.insertOne(log);
+      res.send({ success: true, insertedId: result.insertedId });
+    });
+
+    app.get("/trackings", async (req, res) => {
+      try {
+        const userEmail = req.query.email;
+
+        const query = userEmail ? { email: userEmail } : {};
+        const options = { sort: { paid_at: -1 } }; // Latest first
+        const payments = await trackingCollection
+          .find(query, options)
+          .toArray();
+        res.send(payments);
+      } catch (error) {
+        console.error("Error fetching payment history:", error);
+        res.status(500).send({ message: "Failed to get payments" });
+      }
+    });
 
     // payments er gula pawar jonno
     app.get("/payments", async (req, res) => {
