@@ -35,6 +35,22 @@ async function run() {
     const parcelCollection = db.collection("parcels"); // collection
     const paymentCollection = db.collection("payments");
     const trackingCollection = db.collection("trackings");
+    const userCollection = db.collection("users");
+
+    // users
+    app.post("/users", async (req, res) => {
+      const email = req.body.email;
+      const userExists = await userCollection.findOne({ email });
+      if (userExists) {
+        //user last log in
+        return res
+          .status(200)
+          .send({ message: "User already exists", inserted: false });
+      }
+      const user = req.body;
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
 
     app.get("/parcels", async (req, res) => {
       const parcels = await parcelCollection.find().toArray();
